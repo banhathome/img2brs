@@ -921,10 +921,9 @@ braces@^3.0.3:
   dependencies:
     fill-range "^7.1.1"
 
-brs-js@^2.1.1:
+"brs-js@git+https://github.com/banhathome/brs-js.git#master":
   version "2.1.1"
-  resolved "https://registry.yarnpkg.com/brs-js/-/brs-js-2.1.1.tgz#746453659d4797cc15b9525665cd729a8aff47d5"
-  integrity sha512-0Xx4QShX/XRy536MWMjkk1QslRocyCGMDNdA/6gmkFo81kHt/A7C9C5XdpcX2QTNqcZuMTZ2HEfCJ6E2DxfAYw==
+  resolved "git+https://github.com/banhathome/brs-js.git#93c90cfbbcc4485b8276791e5cc02c3c9458cd74"
   dependencies:
     detect-node "^2.0.4"
 
