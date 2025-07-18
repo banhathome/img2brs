@@ -70,11 +70,11 @@ export default function Home() {
       </header>
       <main className="grid grid-cols-3 grid-rows-1 gap-8 w-full">
         <div>
-          <div {...getRootProps({className: 'dropzone flex flex-col items-center justify-center gap-4 rounded-2xl border border-white p-4 h-full hover:cursor-pointer'})}>
+          <div {...getRootProps({className: 'dropzone flex flex-col items-center justify-center gap-4 rounded-2xl border border-4 dark:border-white p-8 h-full hover:cursor-pointer'})}>
             {file ?
-              <div className="inline-flex rounded-md m-8 p-4 box-border" key={file.name}>
+              <div className="inline-flex rounded-md box-border" key={file.name}>
                 <div className="flex relative min-w-0 overflow-hidden">
-                  <button onClick={onImageClick} className="*:hover:visible">
+                  <button onClick={onImageClick} className="hover:cursor-pointer hover:*:visible">
                     <div className="absolute flex justify-center items-center bg-black/75 w-full h-full invisible">❌</div>
                     <img
                       src={file.preview}
@@ -96,7 +96,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="col-span-2 flex gap-4 items-center justify-center flex-col sm:flex-row border border-white rounded-2xl p-4">
+        <div className="col-span-2 flex gap-4 items-center justify-center flex-col sm:flex-row border border-4 dark:border-white rounded-2xl p-8">
 
           <form onSubmit={onFormSubmit} className="grid grid-cols-3 grid-rows-4 gap-4">
             <label className="col-start-1 row-start-1 col-span-3 row-span-1 w-full">Save Name (.brs) <input type="text" name="saveName" placeholder="Enter a save name" className="pl-2 rounded border" /></label>
