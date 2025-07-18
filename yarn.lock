@@ -1803,10 +1803,10 @@ ignore@^7.0.0:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-7.0.5.tgz#4cb5f6cd7d4c7ab0365738c7aea888baa6d7efd9"
   integrity sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==
 
-img2brs@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/img2brs/-/img2brs-1.0.1.tgz#f25445844a7532deb51aceb9b1ee65b1470c7064"
-  integrity sha512-FtWAQI8NIIxgrrCAismaq9t1cXIQahavMa37rGHySm3XrtXxRqzDy6sB/SwWw8vRAVQlcXirAXF1c1fM973DvA==
+img2brs@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/img2brs/-/img2brs-1.0.2.tgz#be0fa267a74dcaed74d2e27567e3e12f0b48dd3b"
+  integrity sha512-IJz1VT7ie1FMklnbFqsyKZhsBOKePWPKixnECrJJp+5dtkxhyzdUrG3pAIRMguzXkgifP19wbkDu6c0FkmPWog==
   dependencies:
     brs-js "^2.1.2"
     canvas "^3.1.2"
