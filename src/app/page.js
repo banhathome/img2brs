@@ -82,7 +82,7 @@ export default function Home() {
         setError(err.message);
       }
       setIsLoading(false);
-    }, 0);
+    }, 50);
   };
 
   return (
@@ -94,8 +94,6 @@ export default function Home() {
               <img
                 src={file.preview}
                 className="block w-auto h-full"
-                // Revoke data uri after image is loaded
-                onLoad={() => { URL.revokeObjectURL(file.preview) }}
               />
               <p>Converting...</p>
               <p>(Your browser might freeze)</p>
@@ -127,8 +125,6 @@ export default function Home() {
                     <img
                       src={file.preview}
                       className="block w-auto h-full relative"
-                      // Revoke data uri after image is loaded
-                      onLoad={() => { URL.revokeObjectURL(file.preview) }}
                     />
                   </button>
                 </div>
