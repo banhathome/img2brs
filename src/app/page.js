@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import img2brs, { BRICKS, MATERIALS } from 'img2brs';
+import { BRICKS, MATERIALS } from 'img2brs';
 
 const BRICK_LABELS = {
   'PB_DefaultBrick': 'Default',
@@ -27,8 +27,46 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isConvertComplete, setIsConvertComplete] = useState(false);
+  const workerRef = useRef(null);
+  const formRef = useRef(null);
 
-   const { getRootProps, getInputProps } = useDropzone({
+  useEffect(() => {
+    workerRef.current = new Worker(
+      new URL('./img2brs-worker.js', import.meta.url)
+    );
+
+    workerRef.current.onmessage = function(e) {
+      const { type, result, error } = e.data;
+      if (type === 'success') {
+        // Handle download
+        const { saveName } = Object.fromEntries(new FormData(formRef.current));
+        const fileName = saveName || 'default.brs';
+        const url = URL.createObjectURL(result);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName.endsWith('.brs') ? fileName : `${fileName}.brs`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        setIsConvertComplete(true);
+      } else if (type === 'error') {
+        setError(new Error(error).message);
+      }
+
+      setIsLoading(false);
+    };
+
+    return () => {
+      if (workerRef.current) {
+        workerRef.current.terminate();
+      }
+    };
+  }, []);
+
+  const { getRootProps, getInputProps } = useDropzone({
     accept: {
       'image/*': []
     },
@@ -48,65 +86,66 @@ export default function Home() {
     setFile(null);
   };
 
-  const onFormSubmit = (e) => {
+  const onFormSubmit = async (e) => {
     e.preventDefault();
 
     setIsLoading(true);
+    setError(null);
 
-    // Use setTimeout to perform it asynchronously
-    // TODO: Use web worker
-    setTimeout(() => {
-      try {
-        const {
-          brick,
-          material,
-          saveName,
-          sizeX,
-          sizeY,
-          sizeZ,
-          simpleDirection,
-        } = Object.fromEntries(new FormData(e.target));
+    try {
+      const {
+        brick,
+        material,
+        sizeX,
+        sizeY,
+        sizeZ,
+        simpleDirection,
+      } = Object.fromEntries(new FormData(formRef.current));
 
-        const size = [Number(sizeX), Number(sizeY), Number(sizeZ)];
-        img2brs(file, {
-          brick,
-          material,
-          size,
-          simpleDirection,
-          saveName,
-        }, true);
+      const size = [Number(sizeX), Number(sizeY), Number(sizeZ)];
 
-        setIsConvertComplete(true);
-      } catch (err) {
-        console.trace(err)
-        setError(err.message);
-      }
+      const options = {
+        brick,
+        material,
+        size,
+        simpleDirection,
+      };
+
+      const image = await createImageBitmap(file);
+
+      // Send the image and options to the web worker
+      workerRef.current.postMessage({
+        image,
+        options,
+      });
+
+    } catch (err) {
+      setError(err.message);
       setIsLoading(false);
-    }, 50);
+    }
   };
 
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       {(isLoading || error || isConvertComplete) &&
-        <div className="absolute w-screen h-screen bg-black/85 flex items-center justify-center">
+        <div className="absolute w-screen h-screen bg-black/85 flex items-center justify-center z-10">
           <div className="rounded-2xl border border-4 dark:border-white p-30 text-3xl bg-black text-white flex items-center justify-center flex-col gap-10 hover:cursor-pointer" onClick={isLoading ? () => {} : onOverlayCloseClick}>
             {isLoading && <>
               <img
                 src={file.preview}
                 className="block w-auto h-full"
               />
-              <p>Converting...</p>
-              <p>(Your browser might freeze)</p>
+              <p>⌛ Converting...</p>
             </>}
             {error && <>
-              <p>An error has occurred: <strong>"{error}"</strong></p>
-              <p>Please send this error message to @proudsuburbandad on Discord.</p>
-              <p>Click on this message to close and try again.</p>
+              <p>⚠️ An error has occurred: <strong>"{error}"</strong></p>
+              <p>📧 Please send this error message to @proudsuburbandad on Discord.</p>
+              <p>👇 Click on this message to close and try again.</p>
             </>}
             {isConvertComplete && <>
-              <p>Conversion Complete!</p>
-              <p>Please check your browser downloads.</p>
-              <p>Click on this message to close this overlay.</p>
+              <p>🍾 Conversion Complete!</p>
+              <p>📁 Please check your browser downloads.</p>
+              <p>👇 Click on this message to close this overlay.</p>
             </>}
           </div>
         </div>
@@ -120,7 +159,7 @@ export default function Home() {
             {file ?
               <div className="inline-flex rounded-md box-border" key={file.name}>
                 <div className="flex relative min-w-0 overflow-hidden">
-                  <button onClick={onImageClick} className="hover:cursor-pointer hover:*:visible -z-1">
+                  <button onClick={onImageClick} className="hover:cursor-pointer hover:*:visible">
                     <div className="absolute flex justify-center items-center bg-black/75 w-full h-full z-1 invisible">❌</div>
                     <img
                       src={file.preview}
@@ -141,7 +180,7 @@ export default function Home() {
         </div>
 
         <div className="col-span-2 flex gap-4 items-center justify-center flex-col sm:flex-row border border-4 dark:border-white rounded-2xl p-8">
-          <form onSubmit={onFormSubmit} className="grid grid-cols-3 grid-rows-4 gap-4">
+          <form onSubmit={onFormSubmit} ref={formRef} className="grid grid-cols-3 grid-rows-4 gap-4">
             <label className="col-start-1 row-start-1 col-span-3 row-span-1 w-full">Save Name (.brs) <input type="text" name="saveName" placeholder="Enter a save name" className="pl-2 rounded border" /></label>
             <label className="col-start-1 row-start-2 col-span-1 row-span-1">Size X <input type="text" name="sizeX" defaultValue="5" required className="pl-2 rounded border" /></label>
             <label className="col-start-2 row-start-2 col-span-1 row-span-1">Size Y <input type="text" name="sizeY" defaultValue="5" required className="pl-2 rounded border" /></label>
