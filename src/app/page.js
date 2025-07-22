@@ -24,6 +24,9 @@ const MATERIAL_LABELS = {
 
 export default function Home() {
   const [file, setFile] = useState(null);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isConvertComplete, setIsConvertComplete] = useState(false);
 
    const { getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -36,6 +39,11 @@ export default function Home() {
     }
   });
 
+  const onOverlayCloseClick = () => {
+    setError(null);
+    setIsConvertComplete(false);
+  };
+
   const onImageClick = () => {
     setFile(null);
   };
@@ -43,28 +51,68 @@ export default function Home() {
   const onFormSubmit = (e) => {
     e.preventDefault();
 
-    const {
-      brick,
-      material,
-      saveName,
-      sizeX,
-      sizeY,
-      sizeZ,
-      simpleDirection,
-    } = Object.fromEntries(new FormData(e.target));
+    setIsLoading(true);
 
-    const size = [Number(sizeX), Number(sizeY), Number(sizeZ)];
-    img2brs(file, {
-      brick,
-      material,
-      size,
-      simpleDirection,
-      saveName,
-    }, true);
+    // Use setTimeout to perform it asynchronously
+    // TODO: Use web worker
+    setTimeout(() => {
+      try {
+        const {
+          brick,
+          material,
+          saveName,
+          sizeX,
+          sizeY,
+          sizeZ,
+          simpleDirection,
+        } = Object.fromEntries(new FormData(e.target));
+
+        const size = [Number(sizeX), Number(sizeY), Number(sizeZ)];
+        img2brs(file, {
+          brick,
+          material,
+          size,
+          simpleDirection,
+          saveName,
+        }, true);
+
+        setIsConvertComplete(true);
+      } catch (err) {
+        console.trace(err)
+        setError(err.message);
+      }
+      setIsLoading(false);
+    }, 0);
   };
 
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
+      {(isLoading || error || isConvertComplete) &&
+        <div className="absolute w-screen h-screen bg-black/85 flex items-center justify-center">
+          <div className="rounded-2xl border border-4 dark:border-white p-30 text-3xl bg-black text-white flex items-center justify-center flex-col gap-10 hover:cursor-pointer" onClick={isLoading ? () => {} : onOverlayCloseClick}>
+            {isLoading && <>
+              <img
+                src={file.preview}
+                className="block w-auto h-full"
+                // Revoke data uri after image is loaded
+                onLoad={() => { URL.revokeObjectURL(file.preview) }}
+              />
+              <p>Converting...</p>
+              <p>(Your browser might freeze)</p>
+            </>}
+            {error && <>
+              <p>An error has occurred: <strong>"{error}"</strong></p>
+              <p>Please send this error message to @proudsuburbandad on Discord.</p>
+              <p>Click on this message to close and try again.</p>
+            </>}
+            {isConvertComplete && <>
+              <p>Conversion Complete!</p>
+              <p>Please check your browser downloads.</p>
+              <p>Click on this message to close this overlay.</p>
+            </>}
+          </div>
+        </div>
+      }
       <header className="row-start-1 flex gap-[24px] flex-wrap">
         <h1 className="font-medium text-2xl">🖼️ img2brs.js 🧱</h1>
       </header>
@@ -74,11 +122,11 @@ export default function Home() {
             {file ?
               <div className="inline-flex rounded-md box-border" key={file.name}>
                 <div className="flex relative min-w-0 overflow-hidden">
-                  <button onClick={onImageClick} className="hover:cursor-pointer hover:*:visible">
-                    <div className="absolute flex justify-center items-center bg-black/75 w-full h-full invisible">❌</div>
+                  <button onClick={onImageClick} className="hover:cursor-pointer hover:*:visible -z-1">
+                    <div className="absolute flex justify-center items-center bg-black/75 w-full h-full z-1 invisible">❌</div>
                     <img
                       src={file.preview}
-                      className="block w-auto h-full"
+                      className="block w-auto h-full relative"
                       // Revoke data uri after image is loaded
                       onLoad={() => { URL.revokeObjectURL(file.preview) }}
                     />
@@ -97,7 +145,6 @@ export default function Home() {
         </div>
 
         <div className="col-span-2 flex gap-4 items-center justify-center flex-col sm:flex-row border border-4 dark:border-white rounded-2xl p-8">
-
           <form onSubmit={onFormSubmit} className="grid grid-cols-3 grid-rows-4 gap-4">
             <label className="col-start-1 row-start-1 col-span-3 row-span-1 w-full">Save Name (.brs) <input type="text" name="saveName" placeholder="Enter a save name" className="pl-2 rounded border" /></label>
             <label className="col-start-1 row-start-2 col-span-1 row-span-1">Size X <input type="text" name="sizeX" defaultValue="5" required className="pl-2 rounded border" /></label>
